@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Diamond Edge — MLB V2</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Teko:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
+
+  :root{
+    --bg:#0b1f17;
+    --panel:#12291f;
+    --panel-2:#183b2c;
+    --panel-3:#0e241b;
+    --line: rgba(245,241,232,0.14);
+    --ink:#f5f1e8;
+    --ink-dim:#a9bdaf;
+    --ink-faint:#7a8e80;
+    --amber:#f2b705;
+    --amber-dim:#8a6a0e;
+    --clay:#c1622f;
+    --teal:#4fb3ab;
+    --bad:#d9534f;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse at top, #163325 0%, var(--bg) 55%),
+      var(--bg);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+  }
+
+  ::selection{background:var(--amber); color:#1a1400;}
+
+  a{color:var(--amber);}
+
+  .wrap{max-width:1180px; margin:0 auto; padding:0 20px 60px;}
+
+  header.top{
+    position:sticky; top:0; z-index:20;
+    background:rgba(11,31,23,0.92);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line);
+    padding:18px 20px 14px;
+  }
+  header.top .inner{max-width:1180px; margin:0 auto;}
+
+  .brand{display:flex; align-items:baseline; gap:12px; flex-wrap:wrap;}
+  .brand h1{
+    font-family:'Teko',sans-serif;
+    font-weight:700;
+    font-size:42px;
+    letter-spacing:1px;
+    color:var(--amber);
+    margin:0;
+    line-height:1;
+    text-transform:uppercase;
+  }
+  .brand .tag{
+    font-size:12px;
+    color:var(--ink-dim);
+    letter-spacing:2px;
+    text-transform:uppercase;
+    border-left:2px solid var(--line);
+    padding-left:12px;
+  }
+
+  .controls{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    margin-top:14px;
+  }
+  .controls label{font-size:12px; color:var(--ink-dim); text-transform:uppercase; letter-spacing:1px; margin-right:4px;}
+  input[type=date], input[type=number], input[type=text]{
+    background:var(--panel-3);
+    border:1px solid var(--line);
+    color:var(--ink);
+    font-family:'JetBrains Mono',monospace;
+    font-size:13px;
+    padding:8px 10px;
+    border-radius:4px;
+  }
+  input:focus{outline:2px solid var(--amber); outline-offset:1px;}
+
+  button{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:13px;
+    letter-spacing:0.5px;
+    background:var(--amber);
+    color:#1a1400;
+    border:none;
+    padding:9px 18px;
+    border-radius:4px;
+    cursor:pointer;
+    transition:transform .1s ease, background .15s ease;
+  }
+  button:hover{background:#ffcb2e;}
+  button:active{transform:scale(0.97);}
+  button:focus-visible{outline:2px solid var(--ink); outline-offset:2px;}
+  button.ghost{
+    background:transparent;
+    color:var(--ink-dim);
+    border:1px solid var(--line);
+  }
+  button.ghost:hover{color:var(--ink); border-color:var(--ink-dim); background:transparent;}
+
+  .status-line{font-size:12px; color:var(--ink-faint); margin-top:8px; font-family:'JetBrains Mono',monospace;}
+
+  main{padding-top:26px;}
+
+  .state-msg{
+    text-align:center;
+    padding:60px 20px;
+    color:var(--ink-dim);
+    font-family:'JetBrains Mono',monospace;
+    font-size:14px;
+  }
+  .state-msg .big{
+    font-family:'Teko',sans-serif;
+    font-size:28px;
+    color:var(--amber);
+    text-transform:uppercase;
+    letter-spacing:2px;
+    display:block;
+    margin-bottom:6px;
+  }
+  .error-box{
+    border:1px solid var(--bad);
+    background:rgba(217,83,79,0.08);
+    color:var(--ink);
+    padding:16px 18px;
+    border-radius:6px;
+    font-size:14px;
+    line-height:1.5;
+  }
+
+  .games-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(360px, 1fr));
+    gap:18px;
+  }
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    overflow:hidden;
+    display:flex; flex-direction:column;
+  }
+
+  .card .strip{
+    display:flex; justify-content:space-between; align-items:flex-start;
+    padding:14px 16px 10px;
+    border-bottom:1px solid var(--line);
+  }
+  .matchup{font-family:'Teko',sans-serif; font-size:26px; font-weight:600; line-height:1.05; letter-spacing:.5px;}
+  .matchup .at{color:var(--ink-faint); font-size:18px; margin:0 4px;}
+  .meta-right{text-align:right; font-size:12px; color:var(--ink-dim); font-family:'JetBrains Mono',monospace; line-height:1.5;}
+
+  .weather-chip{
+    display:flex; gap:14px; flex-wrap:wrap;
+    padding:10px 16px;
+    background:var(--panel-3);
+    font-size:12px; color:var(--ink-dim);
+    font-family:'JetBrains Mono',monospace;
+    border-bottom:1px solid var(--line);
+  }
+  .weather-chip b{color:var(--ink); font-weight:600;}
+
+  .section{padding:12px 16px; border-bottom:1px solid var(--line);}
+  .section h3{
+    font-family:'Teko',sans-serif; font-size:16px; letter-spacing:1.5px;
+    text-transform:uppercase; color:var(--ink-faint); margin:0 0 8px;
+    font-weight:600;
+  }
+
+  .pitchers{display:grid; grid-template-columns:1fr auto 1fr; gap:8px; align-items:center;}
+  .pitcher{font-size:13px;}
+  .pitcher .name{font-weight:600; color:var(--ink);}
+  .pitcher .stat{font-family:'JetBrains Mono',monospace; color:var(--ink-dim); font-size:12px;}
+  .pitchers .vs{font-family:'Teko',sans-serif; color:var(--ink-faint); font-size:16px;}
+  .pitcher.away{text-align:left;}
+  .pitcher.home{text-align:right;}
+
+  table.trend{width:100%; border-collapse:collapse; font-size:12px;}
+  table.trend th{
+    text-align:left; color:var(--ink-faint); font-weight:600;
+    text-transform:uppercase; letter-spacing:.5px; font-size:10px;
+    padding:2px 6px 6px;
+  }
+  table.trend td{
+    padding:3px 6px; font-family:'JetBrains Mono',monospace; color:var(--ink);
+  }
+  table.trend tr:nth-child(odd) td{background:rgba(255,255,255,0.02);}
+  table.trend th:not(:first-child), table.trend td:not(:first-child){text-align:center;}
+
+  .model{
+    background:var(--panel-2);
+    border-left:3px solid var(--amber);
+    padding:14px 16px;
+  }
+  .model h3{color:var(--amber); margin-bottom:10px;}
+  .read-row{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:6px; flex-wrap:wrap;}
+  .read-row .label{font-size:13px; font-weight:600;}
+  .balls{display:flex; gap:3px;}
+  .reasons{margin:6px 0 12px; padding-left:18px; font-size:12.5px; color:var(--ink-dim); line-height:1.55;}
+  .reasons li{margin-bottom:2px;}
+
+  .book-inputs{
+    display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+    margin-top:8px; padding-top:10px; border-top:1px dashed var(--line);
+  }
+  .book-inputs label{font-size:11px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.5px; display:block; margin-bottom:3px;}
+  .book-inputs input{width:90px;}
+  .edge-note{font-size:12.5px; color:var(--teal); margin-top:8px; font-weight:600;}
+  .edge-note.none{color:var(--ink-faint); font-weight:400;}
+  .portfolio{margin:0 0 20px;padding:16px;background:var(--panel);border:1px solid var(--line);border-radius:8px;line-height:1.6;font-size:13px;}
+  .portfolio h2{font-family:Teko,sans-serif;color:var(--amber);margin:0;font-size:24px;}
+  .portfolio ol{padding-left:22px;}
+  .portfolio .note{color:var(--ink-dim);font-size:11px;}
+  .quality{font-size:11px;color:var(--ink-dim);line-height:1.5;margin:8px 0;}
+  .edge-note{line-height:1.55;}
+
+  footer{
+    max-width:1180px; margin:40px auto 0; padding:20px;
+    border-top:1px solid var(--line);
+    font-size:12px; color:var(--ink-faint); line-height:1.6;
+  }
+  footer b{color:var(--ink-dim);}
+
+  @media (max-width:520px){
+    .brand h1{font-size:34px;}
+    .pitchers{grid-template-columns:1fr; text-align:left !important;}
+    .pitchers .vs{display:none;}
+    .pitcher.home{text-align:left;}
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="inner">
+    <div class="brand">
+      <h1>Diamond Edge</h1>
+      <span class="tag">Lectura diaria · MLB V2</span>
+    </div>
+    <div class="controls">
+      <label for="datePick">Fecha</label>
+      <input type="date" id="datePick">
+      <button id="loadBtn">Cargar juegos</button>
+      <button class="ghost" id="refreshBtn" title="Volver a consultar los mismos datos">↻ Actualizar</button>
+    </div>
+    <div class="status-line" id="statusLine">Listo.</div>
+  </div>
+</header>
+
+<div class="wrap">
+  <main id="app">
+    <div class="state-msg"><span class="big">Cargando…</span>Selecciona una fecha y presiona "Cargar juegos".</div>
+  </main>
+</div>
+
+<footer>
+  <p><b>Cómo funciona:</b> la app consulta el calendario y estadísticas de MLB con corte al día anterior al juego. Proyecta carreras con promedios de equipo y abridores ajustados por muestra. Las probabilidades usan una distribución Poisson simplificada y no están calibradas con resultados históricos. Las cuotas y líneas las introduces tú; verifica que sean actuales.</p>
+  <p><b>Aviso importante:</b> esta herramienta es informativa/educativa. El modelo es heurístico, sin backtest publicado ni garantía de ventaja; sus probabilidades y umbrales no demuestran rentabilidad. Nada aquí es asesoría financiera ni de apuestas. Apuesta con responsabilidad y solo dinero que puedas permitirte perder. Si tú o alguien que conoces tiene un problema con el juego, en EE.UU. puedes llamar o enviar mensaje de texto al 1-800-GAMBLER.</p>
+  <p>Fuentes de datos: statsapi.mlb.com (calendario, planteles, estadísticas) y open-meteo.com (pronóstico del clima). Si los datos en vivo no cargan, puede deberse a restricciones de red o CORS del navegador — intenta abrir este archivo directamente en una pestaña del navegador.</p>
+</footer>
+
+<script>
+(function(){
+
+  // ---------- Stadium reference table ----------
+  // roof: "open" (no roof), "retractable" (may open/close), "dome" (fixed, always closed)
+  const STADIUMS = [
+    {key:"angel stadium", lat:33.8003, lon:-117.8827, tz:"America/Los_Angeles", roof:"open"},
+    {key:"chase field", lat:33.4453, lon:-112.0667, tz:"America/Phoenix", roof:"retractable"},
+    {key:"truist park", lat:33.8908, lon:-84.4678, tz:"America/New_York", roof:"open"},
+    {key:"camden yards", lat:39.2839, lon:-76.6217, tz:"America/New_York", roof:"open"},
+    {key:"fenway park", lat:42.3467, lon:-71.0972, tz:"America/New_York", roof:"open"},
+    {key:"wrigley field", lat:41.9484, lon:-87.6553, tz:"America/Chicago", roof:"open"},
+    {key:"rate field", lat:41.8299, lon:-87.6338, tz:"America/Chicago", roof:"open"},
+    {key:"great american ball park", lat:39.0975, lon:-84.5065, tz:"America/New_York", roof:"open"},
+    {key:"progressive field", lat:41.4962, lon:-81.6852, tz:"America/New_York", roof:"open"},
+    {key:"coors field", lat:39.7559, lon:-104.9942, tz:"America/Denver", roof:"open", altitude:true},
+    {key:"comerica park", lat:42.3390, lon:-83.0485, tz:"America/New_York", roof:"open"},
+    {key:"daikin park", lat:29.7573, lon:-95.3555, tz:"America/Chicago", roof:"retractable"},
+    {key:"minute maid", lat:29.7573, lon:-95.3555, tz:"America/Chicago", roof:"retractable"},
+    {key:"kauffman stadium", lat:39.0517, lon:-94.4803, tz:"America/Chicago", roof:"open"},
+    {key:"dodger stadium", lat:34.0739, lon:-118.2400, tz:"America/Los_Angeles", roof:"open"},
+    {key:"loandepot park", lat:25.7781, lon:-80.2196, tz:"America/New_York", roof:"retractable"},
+    {key:"american family field", lat:43.0280, lon:-87.9712, tz:"America/Chicago", roof:"retractable"},
+    {key:"target field", lat:44.9817, lon:-93.2776, tz:"America/Chicago", roof:"open"},
+    {key:"citi field", lat:40.7571, lon:-73.8458, tz:"America/New_York", roof:"open"},
+    {key:"yankee stadium", lat:40.8296, lon:-73.9262, tz:"America/New_York", roof:"open"},
+    {key:"sutter health park", lat:38.5806, lon:-121.5136, tz:"America/Los_Angeles", roof:"open"},
+    {key:"citizens bank park", lat:39.9061, lon:-75.1665, tz:"America/New_York", roof:"open"},
+    {key:"pnc park", lat:40.4469, lon:-80.0057, tz:"America/New_York", roof:"open"},
+    {key:"petco park", lat:32.7076, lon:-117.1570, tz:"America/Los_Angeles", roof:"open"},
+    {key:"oracle park", lat:37.7786, lon:-122.3893, tz:"America/Los_Angeles", roof:"open"},
+    {key:"t-mobile park", lat:47.5914, lon:-122.3325, tz:"America/Los_Angeles", roof:"retractable"},
+    {key:"busch stadium", lat:38.6226, lon:-90.1928, tz:"America/Chicago", roof:"open"},
+    {key:"tropicana field", lat:27.7683, lon:-82.6534, tz:"America/New_York", roof:"dome"},
+    {key:"globe life field", lat:32.7473, lon:-97.0842, tz:"America/Chicago", roof:"retractable"},
+    {key:"rogers centre", lat:43.6414, lon:-79.3894, tz:"America/Toronto", roof:"retractable"},
+    {key:"nationals park", lat:38.8730, lon:-77.0074, tz:"America/New_York", roof:"open"}
+  ];
+
+  function findStadium(venueName){
+    const n = (venueName||"").toLowerCase();
+    return STADIUMS.find(s => n.includes(s.key)) || null;
+  }
+
+  // ---------- caches ----------
+  const selections = new Map();
+  const recommendations = new Map();
+  const pitcherCache = new Map();
+  const weatherCache = new Map();
+  let teamHitting = {}, teamPitching = {}, standingsMap = {}, activeDate = "", activeCutoff = "";
+  let requestSequence = 0;
+  const $ = sel => document.querySelector(sel);
+  const app = $("#app"), statusLine = $("#statusLine");
+  const dateNY = () => { const parts=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()); const v=t=>parts.find(p=>p.type===t)?.value; return `${v('year')}-${v('month')}-${v('day')}`; };
+  const previousDay = d => new Date(Date.parse(d+'T12:00:00Z')-86400000).toISOString().slice(0,10);
+  const numeric = v => { if(v==null||v==='')return null; const n=Number(v); return Number.isFinite(n)?n:null; };
+  const esc = v => String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  $("#datePick").value = dateNY();
+  $("#loadBtn").addEventListener("click", () => loadEverything($("#datePick").value));
+  $("#refreshBtn").addEventListener("click", () => loadEverything($("#datePick").value, true));
+  async function fetchJSON(url){
+    const res = await fetch(url);
+    if(!res.ok) throw new Error(`HTTP ${res.status} (${new URL(url).hostname})`);
+    return res.json();
+  }
+  async function loadEverything(dateStr, refresh=false){
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)){ statusLine.textContent='Selecciona una fecha válida.'; return; }
+    const seq=++requestSequence, today=dateNY(), historical=dateStr<today;
+    // All statistics end BEFORE the requested day, including live games today.
+    const cutoff=previousDay(dateStr), season=Number(dateStr.slice(0,4));
+    activeDate=dateStr; activeCutoff=cutoff; selections.clear(); recommendations.clear();
+    app.innerHTML='<div class="state-msg"><span class="big">Consultando MLB…</span>Datos disponibles antes del juego.</div>';
+    statusLine.textContent=`Cargando ${dateStr} · corte estadístico ${cutoff}…`;
+    try{
+      const seasonStart=`${season}-01-01`, range=`stats=byDateRange&season=${season}&startDate=${seasonStart}&endDate=${cutoff}`;
+      const [schedule,hitting,pitching,standings]=await Promise.all([
+        fetchJSON(`https://statsapi.mlb.com/api/v1/schedule?sportId=1&date=${dateStr}&hydrate=team,probablePitcher,venue`),
+        fetchJSON(`https://statsapi.mlb.com/api/v1/teams/stats?${range}&group=hitting&sportIds=1`),
+        fetchJSON(`https://statsapi.mlb.com/api/v1/teams/stats?${range}&group=pitching&sportIds=1`),
+        fetchJSON(`https://statsapi.mlb.com/api/v1/standings?leagueId=103,104&season=${season}&standingsTypes=regularSeason&date=${cutoff}`)
+      ]);
+      if(seq!==requestSequence)return;
+      teamHitting={};teamPitching={};standingsMap={};
+      for(const row of hitting.stats?.[0]?.splits||[]) if(row.team?.id) teamHitting[row.team.id]=row.stat;
+      for(const row of pitching.stats?.[0]?.splits||[]) if(row.team?.id) teamPitching[row.team.id]=row.stat;
+      for(const record of standings.records||[]) for(const tr of record.teamRecords||[]){
+        const splits=tr.records?.splitRecords||tr.splitRecords||[];
+        const find=t=>splits.find(x=>x.type?.toLowerCase()===t);
+        standingsMap[tr.team.id]={wins:tr.wins,losses:tr.losses,winPct:numeric(tr.winningPercentage),streak:tr.streak?.streakCode,
+          lastTen:find('lastten'),home:find('home'),away:find('away')};
+      }
+      const games=(schedule.dates?.[0]?.games||[]).filter(g=>g.status?.abstractGameState!=='Cancelled');
+      if(!games.length){app.innerHTML='<div class="state-msg">No hay juegos programados para esa fecha.</div>';statusLine.textContent='Sin juegos.';return;}
+      const ids=new Set(games.flatMap(g=>[g.teams.away.probablePitcher?.id,g.teams.home.probablePitcher?.id]).filter(Boolean));
+      await Promise.all([...ids].map(async id=>{
+        const key=`${id}_${cutoff}`;
+        if(!refresh && pitcherCache.has(key))return;
+        try{const d=await fetchJSON(`https://statsapi.mlb.com/api/v1/people/${id}/stats?${range}&group=pitching`);
+          pitcherCache.set(key,d.stats?.[0]?.splits?.[0]?.stat||null);
+        }catch{pitcherCache.set(key,null);}
+      }));
+      // Forecast is never used for a past date; a current forecast cannot recreate pregame weather.
+      if(!historical){
+        const venues=new Map();
+        for(const g of games){const st=findStadium(g.venue?.name);if(st&&st.roof!=='dome')venues.set(g.venue.name,st);}
+        await Promise.all([...venues].map(async ([name,st])=>{
+          const key=`${name}_${dateStr}`;if(!refresh&&weatherCache.has(key))return;
+          try{const d=await fetchJSON(`https://api.open-meteo.com/v1/forecast?latitude=${st.lat}&longitude=${st.lon}&hourly=temperature_2m,wind_speed_10m,precipitation_probability&timezone=${encodeURIComponent(st.tz)}&start_date=${dateStr}&end_date=${dateStr}&temperature_unit=fahrenheit&wind_speed_unit=mph`);weatherCache.set(key,d);}
+          catch{weatherCache.set(key,null);}
+        }));
+      }
+      if(seq!==requestSequence)return;
+      renderGames(games,dateStr,cutoff,historical);
+      statusLine.textContent=`${games.length} juegos · corte ${cutoff} · actualizado ${new Date().toLocaleTimeString('es-PR',{timeZone:'America/Puerto_Rico'})} (PR)`;
+    }catch(e){if(seq!==requestSequence)return;console.error(e);app.innerHTML=`<div class="error-box">No se pudieron cargar los datos: ${esc(e.message)}. Reintenta en unos segundos.</div>`;statusLine.textContent='Error al cargar datos.';}
+  }
+  function pickWeatherAt(data,tz,date){
+    if(!data?.hourly)return null;
+    const parts=new Intl.DateTimeFormat('sv-SE',{timeZone:tz,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',hour12:false}).formatToParts(new Date(date));
+    const get=t=>parts.find(p=>p.type===t)?.value;
+    const key=`${get('year')}-${get('month')}-${get('day')}T${get('hour')}:00`;
+    const i=data.hourly.time.indexOf(key);if(i<0)return null;
+    return {temp:numeric(data.hourly.temperature_2m[i]),wind:numeric(data.hourly.wind_speed_10m[i]),precip:numeric(data.hourly.precipitation_probability[i])};
+  }
+  function teamAbbr(name){
+    const map={"Diamondbacks":"ARI","Braves":"ATL","Orioles":"BAL","Red Sox":"BOS","Cubs":"CHC","White Sox":"CWS","Reds":"CIN","Guardians":"CLE","Rockies":"COL","Tigers":"DET","Astros":"HOU","Royals":"KC","Dodgers":"LAD","Marlins":"MIA","Brewers":"MIL","Twins":"MIN","Mets":"NYM","Yankees":"NYY","Athletics":"ATH","Phillies":"PHI","Pirates":"PIT","Padres":"SD","Giants":"SF","Mariners":"SEA","Cardinals":"STL","Rays":"TB","Rangers":"TEX","Blue Jays":"TOR","Nationals":"WSH","Angels":"LAA"};
+    return Object.entries(map).find(([k])=>name?.includes(k))?.[1]||name?.slice(0,3).toUpperCase()||'—';
+  }
+  const rate=(n,d)=>numeric(n)!=null&&numeric(d)>0?Number(n)/Number(d):null;
+  function teamBundle(id){const h=teamHitting[id],p=teamPitching[id],s=standingsMap[id];return {
+    runs:rate(h?.runs,h?.gamesPlayed),allowed:rate(p?.runs,p?.gamesPlayed),gp:Number(h?.gamesPlayed)||0,
+    pct:s?.winPct??null,lastTen:s?.lastTen,streak:s?.streak,home:s?.home,away:s?.away,wins:s?.wins,losses:s?.losses
+  };}
+  // Small-sample shrinkage toward league average. The constants are conservative assumptions, not fitted coefficients.
+  function pitcherRate(stat){
+    const era=numeric(stat?.era), starts=Number(stat?.gamesStarted)||0;
+    const ip=stat?.inningsPitched;
+    const [whole,outs='0']=String(ip??'0').split('.');
+    const innings=Number(whole)+Number(outs)/3;
+    if(era==null||!Number.isFinite(innings)||innings<=0)return null;
+    const weight=innings/(innings+45);
+    return {era:Math.max(1.5,Math.min(8,4.4+(era-4.4)*weight)),raw:era,innings,starts};
+  }
+  function project(home,away,hp,ap,stadium,weather){
+    if(home.runs==null||away.runs==null||home.allowed==null||away.allowed==null)return null;
+    const shrink=(v,n)=>4.4+(v-4.4)*Math.min(1,n/(n+25));
+    let h=(shrink(home.runs,home.gp)+shrink(away.allowed,away.gp))/2;
+    let a=(shrink(away.runs,away.gp)+shrink(home.allowed,home.gp))/2;
+    const homeP=pitcherRate(hp),awayP=pitcherRate(ap);
+    // Expected starter share capped at ~5 innings; bullpen uses team runs allowed baseline.
+    if(awayP)h+=Math.max(-1.2,Math.min(1.2,(awayP.era-shrink(away.allowed,away.gp))*0.5*5/9));
+    if(homeP)a+=Math.max(-1.2,Math.min(1.2,(homeP.era-shrink(home.allowed,home.gp))*0.5*5/9));
+    if(stadium?.altitude){h*=1.07;a*=1.07;}
+    if(stadium?.roof==='open'&&weather?.temp!=null){
+      const factor=weather.temp>=85?1.025:weather.temp<=50?.975:1;h*=factor;a*=factor;
+    }
+    h=Math.max(1.8,Math.min(9,h));a=Math.max(1.8,Math.min(9,a));
+    const warnings=[];
+    if(!homeP||!awayP)warnings.push('Abridor sin estadísticas verificables: proyección provisional');
+    if((homeP&&homeP.innings<30)||(awayP&&awayP.innings<30))warnings.push('Muestra pequeña del abridor; valor reducido hacia el promedio');
+    if(stadium?.roof==='retractable')warnings.push('Techo retráctil: confirma si estará abierto');
+    if(stadium?.roof==='open'&&weather?.wind>=15)warnings.push('Viento fuerte: falta dirección respecto al campo');
+    if(stadium?.roof==='open'&&weather?.precip>=50)warnings.push('Posible retraso por lluvia');
+    if(!stadium)warnings.push('Parque sin identificar: sin ajuste de estadio');
+    return {h,a,total:h+a,warnings,complete:!!(homeP&&awayP&&home.gp>=20&&away.gp>=20)};
+  }
+  function poisson(lambda){const p=[Math.exp(-lambda)];for(let n=1;n<=32;n++)p[n]=p[n-1]*lambda/n;return p;}
+  function probabilities(proj,line){
+    const h=poisson(proj.h),a=poisson(proj.a);let home=0,tie=0,over=0,under=0,push=0;
+    for(let i=0;i<h.length;i++)for(let j=0;j<a.length;j++){
+      const mass=h[i]*a[j];if(i>j)home+=mass;else if(i===j)tie+=mass;
+      if(line!=null){if(i+j>line)over+=mass;else if(i+j<line)under+=mass;else push+=mass;}
+    }
+    return {home:home+tie/2,away:1-home-tie/2,over,under,push};
+  }
+  function american(raw){const t=String(raw??'').trim();if(!/^[+-]?\d{3,5}$/.test(t))return null;const x=Number(t);return Math.abs(x)>=100?x:null;}
+  const implied=x=>x<0?-x/(-x+100):100/(x+100);
+  const breakeven=(x,push=0)=>implied(x)*(1-push);
+  const pct=x=>`${(x*100).toFixed(1)}%`;
+  function renderGames(games,dateStr,cutoff,historical){
+    const fragments=['<div class="portfolio" id="portfolio"></div><div class="games-grid">'];const models=new Map();
+    for(const g of games){
+      const away=g.teams.away,home=g.teams.home,id=g.gamePk,aa=teamAbbr(away.team.name),ha=teamAbbr(home.team.name);
+      const hs=teamBundle(home.team.id),as=teamBundle(away.team.id),st=findStadium(g.venue?.name),tz=st?.tz||'America/New_York';
+      const hp=home.probablePitcher?.id?pitcherCache.get(`${home.probablePitcher.id}_${cutoff}`):null;
+      const ap=away.probablePitcher?.id?pitcherCache.get(`${away.probablePitcher.id}_${cutoff}`):null;
+      const weather=!historical&&st&&st.roof!=='dome'?pickWeatherAt(weatherCache.get(`${g.venue.name}_${dateStr}`),tz,g.gameDate):null;
+      const model=project(hs,as,hp,ap,st,weather),probs=model?probabilities(model):null;
+      const state=g.status?.detailedState||g.status?.abstractGameState||'Por confirmar';
+      const started=new Date(g.gameDate)<=new Date();
+      const actionable=!historical&&!started&&g.status?.abstractGameState==='Preview'&&model?.complete;
+      models.set(id,{model,probs,actionable,historical,started,ha,aa});
+      const time=new Date(g.gameDate).toLocaleTimeString('es-ES',{timeZone:tz,hour:'numeric',minute:'2-digit'});
+      const fmt=x=>x!=null?Number(x).toFixed(2):'—';const wl=s=>s?`${s.wins}-${s.losses}`:'—';
+      const pitcherText=(name,stat)=>`${esc(name||'Por confirmar')}<br><small>ERA ${fmt(stat?.era)} · WHIP ${fmt(stat?.whip)} · ${fmt(pitcherRate(stat)?.innings)} IP</small>`;
+      const weatherText=historical?'Clima histórico no disponible; sin ajuste meteorológico':st?.roof==='dome'?'Domo cerrado':weather?`${Math.round(weather.temp)}°F · viento ${Math.round(weather.wind)} mph · lluvia ${Math.round(weather.precip)}% · ${st?.roof==='retractable'?'techo por confirmar':'aire libre'}`:'Clima no disponible';
+      const quality=historical?'Consulta retrospectiva: no representa una predicción guardada antes del juego.':started?'Juego iniciado/finalizado: lectura solo informativa.':!model?'Datos insuficientes para proyectar.':!model.complete?'Modelo provisional; abridor o muestra insuficiente.':'Estimación heurística sin calibración histórica; compara precios con cautela.';
+      fragments.push(`<div class="card"><div class="strip"><div class="matchup">${esc(aa)}<span class="at">@</span>${esc(ha)}</div><div class="meta-right">${esc(time)} local · ${esc(state)}<br>${esc(g.venue?.name||'Parque por confirmar')}</div></div>
+      <div class="weather-chip">${esc(weatherText)}</div>
+      <div class="section"><h3>Abridores probables</h3><div class="pitchers"><div class="pitcher away">${pitcherText(away.probablePitcher?.fullName,ap)}</div><div class="vs">vs</div><div class="pitcher home">${pitcherText(home.probablePitcher?.fullName,hp)}</div></div></div>
+      <div class="section"><h3>Equipos · estadísticas hasta ${esc(cutoff)}</h3><table class="trend"><tr><th></th><th>${esc(aa)}</th><th>${esc(ha)}</th></tr>
+      <tr><td>Rec.</td><td>${wl(as)}</td><td>${wl(hs)}</td></tr><tr><td>C/J anotadas</td><td>${fmt(as.runs)}</td><td>${fmt(hs.runs)}</td></tr>
+      <tr><td>C/J permitidas</td><td>${fmt(as.allowed)}</td><td>${fmt(hs.allowed)}</td></tr><tr><td>Visitante/local</td><td>${wl(as.away)}</td><td>${wl(hs.home)}</td></tr></table></div>
+      <div class="model"><h3>Proyección previa · modelo heurístico</h3>
+      <div class="read-row"><span class="label">${model?`Carreras: ${esc(aa)} ${model.a.toFixed(1)} · ${esc(ha)} ${model.h.toFixed(1)} · total ${model.total.toFixed(1)}`:'Proyección no disponible'}</span></div>
+      <div class="read-row"><span class="label">${probs?`ML ${esc(ha)} ${pct(probs.home)} · ${esc(aa)} ${pct(probs.away)}`:'Sin probabilidad estimada'}</span></div>
+      <p class="quality">${esc(quality)} ${model?.warnings.map(esc).join(' · ')||''}</p>
+      <div class="book-inputs"><div><label for="bt-${id}">Total de tu casa</label><input type="number" min="0.5" max="30" step="0.5" id="bt-${id}" placeholder="8.5"></div>
+      <div><label for="bo-${id}">Cuota Over</label><input type="text" id="bo-${id}" placeholder="-110"></div><div><label for="bu-${id}">Cuota Under</label><input type="text" id="bu-${id}" placeholder="-110"></div>
+      <div><label for="mlh-${id}">ML local</label><input type="text" id="mlh-${id}" placeholder="-140"></div><div><label for="mla-${id}">ML visita</label><input type="text" id="mla-${id}" placeholder="+120"></div>
+      <button class="ghost" data-compare="${id}">Comparar</button></div><div class="edge-note none" id="edge-${id}" aria-live="polite"></div><div id="picks-${id}" class="quality"></div></div></div>`);
+    }
+    fragments.push('</div>');app.innerHTML=fragments.join('');renderPortfolio();
+    for(const g of games){const id=g.gamePk;app.querySelector(`[data-compare="${id}"]`).addEventListener('click',()=>{
+      const obj=models.get(id),box=$(`#edge-${id}`),{model,probs,actionable,ha,aa}=obj;
+      if(!model){box.textContent='Datos insuficientes: sin comparación.';return;}
+      const bt=Number($(`#bt-${id}`).value),validTotal=$(`#bt-${id}`).value!==''&&bt>=.5&&bt<=30&&bt*2===Math.round(bt*2);
+      const h=american($(`#mlh-${id}`).value),a=american($(`#mla-${id}`).value),o=american($(`#bo-${id}`).value),u=american($(`#bu-${id}`).value);
+      const lines=[],candidates=[];
+      if(h!=null&&a!=null){
+        const margin=implied(h)+implied(a)-1;
+        lines.push(`ML: ${ha} punto de equilibrio ${pct(implied(h))}, ${aa} ${pct(implied(a))}; margen de casa ${pct(margin)}.`);
+        if(margin<0||margin>.25)lines.push('Revisa las cuotas ML: margen inusual.');
+      }
+      for(const [label,odds,p] of [[`ML ${ha}`,h,probs.home],[`ML ${aa}`,a,probs.away]])if(odds!=null){
+        const delta=p-implied(odds);lines.push(`${label}: estimación ${pct(p)} vs equilibrio ${pct(implied(odds))} · diferencia ${delta>=0?'+':''}${pct(delta)}.`);
+        if(delta>=.07)candidates.push(label);
+      }
+      if(validTotal){
+        const t=probabilities(model,bt);lines.push(`Total ${bt}: Over ${pct(t.over)}, Under ${pct(t.under)}, push ${pct(t.push)} según Poisson.`);
+        for(const [label,odds,p] of [['Over',o,t.over],['Under',u,t.under]])if(odds!=null){
+          const needed=breakeven(odds,t.push),delta=p-needed;
+          lines.push(`${label} ${odds>0?'+':''}${odds}: equilibrio ${pct(needed)} (push excluido) · diferencia ${delta>=0?'+':''}${pct(delta)}.`);
+          if(delta>=.08&&Math.abs(model.total-bt)>=.8)candidates.push(label);
+        }
+      }else if($(`#bt-${id}`).value)lines.push('Total inválido: usa 0.5 a 30 en pasos de 0.5.');
+      for(const [label,v] of [['ML local',$(`#mlh-${id}`).value],['ML visita',$(`#mla-${id}`).value],['Over',$(`#bo-${id}`).value],['Under',$(`#bu-${id}`).value]])if(v.trim()&&american(v)==null)lines.push(`Cuota ${label} inválida: ejemplo -110 o +120.`);
+      if(!lines.length)lines.push('Ingresa cuotas y/o la línea total para comparar.');
+      lines.push(!actionable?'SIN SEÑAL OPERABLE: juego pasado/iniciado o datos incompletos.':candidates.length?`Candidatas para revisión: ${candidates.join(', ')}. Diferencias heurísticas sin validación; verifica alineaciones, abridores y cuotas.`:'SIN APUESTA: no supera el umbral conservador del modelo.');
+      box.textContent=lines.join(' ');box.className=`edge-note ${!actionable||!candidates.length?'none':''}`;
+      const pickBox=$(`#picks-${id}`);pickBox.replaceChildren(); recommendations.delete(id);
+      if(actionable){
+        const opts=[[`ML ${ha}`,h,probs.home,null],[`ML ${aa}`,a,probs.away,null]];
+        if(validTotal){const t=probabilities(model,bt);opts.push([`Over ${bt}`,o,t.over,t.push],[`Under ${bt}`,u,t.under,t.push]);}
+        const choices=[];
+        for(const [label,odds,p,push] of opts){
+          if(odds==null)continue;
+          const diff=p-breakeven(odds,push||0),threshold=push==null?.07:.08;
+          if(diff<threshold||(push!=null&&Math.abs(model.total-bt)<.8))continue;
+          const key=`${id}:${label}`;
+          if(p>=.60)choices.push({id,label,odds,p,push:push||0,game:`${aa} @ ${ha}`,diff});
+          const button=document.createElement('button');button.className='ghost';button.style.margin='5px 5px 0 0';
+          button.textContent=`${selections.has(key)?'✓ Quitar':'＋ Añadir'} ${label} (${odds>0?'+':''}${odds})`;
+          button.addEventListener('click',()=>{
+            if(selections.has(key)) selections.delete(key);
+            else { if([...selections.values()].some(x=>x.id===id)){alert('Solo una selección por juego para el parlay.');return;}
+              selections.set(key,{id,label,odds,p,push:push||0,game:`${aa} @ ${ha}`,diff}); }
+            renderPortfolio();button.textContent=`${selections.has(key)?'✓ Quitar':'＋ Añadir'} ${label} (${odds>0?'+':''}${odds})`;
+          });pickBox.append(button);
+        }
+        if(choices.length)recommendations.set(id,choices.sort((a,b)=>b.diff-a.diff||b.p-a.p)[0]);
+      }
+      renderPortfolio();
+    });}
+  }
+
+  function renderPortfolio(){
+    const box=$('#portfolio');if(!box)return;
+    box.replaceChildren();
+    const heading=document.createElement('h2');heading.textContent='Selecciones individuales y parlay';box.append(heading);
+    const intro=document.createElement('p');intro.className='note';intro.textContent='Ingresa cuotas actuales y pulsa Comparar. Una selección por juego.';box.append(intro);
+    const suggested=[...recommendations.values()].sort((a,b)=>b.diff-a.diff||b.p-a.p);
+    const recTitle=document.createElement('h3');recTitle.textContent='Recomendaciones automáticas (probabilidad estimada ≥60%)';box.append(recTitle);
+    if(suggested.length){
+      const listRec=document.createElement('ol');
+      for(const r of suggested){const li=document.createElement('li');li.textContent=`${r.game}: ${r.label} ${r.odds>0?'+':''}${r.odds} · ${pct(r.p)} estimada · diferencia +${pct(r.diff)} frente al equilibrio`;listRec.append(li);}box.append(listRec);
+      const best=suggested.slice(0,3),button=document.createElement('button');button.className='ghost';button.textContent=`Armar parlay sugerido (${best.length} juego(s))`;
+      button.addEventListener('click',()=>{selections.clear();for(const r of best)selections.set(`${r.id}:${r.label}`,r);renderPortfolio();});box.append(button);
+      const note=document.createElement('p');note.className='note';note.textContent='El filtro de 60% y el margen requerido son reglas prudentes, no tasas de acierto verificadas. Revisa la cuota antes de usar la selección.';box.append(note);
+    }else{const none=document.createElement('p');none.textContent='Sin recomendación de alta probabilidad con las cuotas ingresadas. Compara las tarjetas de los juegos pendientes o evita apostar.';box.append(none);}
+    const items=[...selections.values()].sort((a,b)=>b.diff-a.diff);
+
+    if(!items.length){const empty=document.createElement('p');empty.textContent='Sin selecciones. Ingresa las cuotas de tu casa y pulsa Comparar en las tarjetas.';box.append(empty);return;}
+    const list=document.createElement('ol');for(const item of items){const li=document.createElement('li');li.textContent=`${item.game} · ${item.label} ${item.odds>0?'+':''}${item.odds} · estimada ${pct(item.p)} · diferencia ${item.diff>=0?'+':''}${pct(item.diff)}`;list.append(li);}box.append(list);
+    const decimal=items.reduce((x,i)=>x*(i.odds>0?1+i.odds/100:1+100/-i.odds),1);
+    const joint=items.reduce((x,i)=>x*i.p,1);
+    const sum=document.createElement('p');sum.textContent=`Parlay ${items.length} pierna(s): cuota americana aproximada ${decimal>=2?'+'+Math.round((decimal-1)*100):Math.round(-100/(decimal-1))}; retorno bruto por $10: $${(10*decimal).toFixed(2)}; probabilidad aproximada ${pct(joint)} (supone independencia).`;box.append(sum);
+    const caveat=document.createElement('p');caveat.className='note';caveat.textContent='La probabilidad combinada puede ser errónea por correlaciones entre juegos, errores compartidos del modelo y cambios de alineaciones. La casa puede ofrecer otra cuota o restringir el parlay. No uses este cálculo como promesa de acierto.';box.append(caveat);
+  }
+
+  // auto-load on first open
+  loadEverything($("#datePick").value);
+
+})();
+</script>
+</body>
+</html>
